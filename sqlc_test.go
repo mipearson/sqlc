@@ -9,7 +9,10 @@ import (
 
 func TestBasicComposition(t *testing.T) {
 	s := Statement{}
-	s = s.Select("*").From("Employees").Where("name = 'Marge'").Order("id")
+	// These statements are deliberately out of order
+	s = s.Group("role").Order("id").Limit("30")
+	s = s.Where("name = 'Marge'")
+	s = s.Select("*").From("Employees")
 
 	sql, args := s.ToSQL()
 	expect(t, args, make([]interface{}, 0))
@@ -17,7 +20,9 @@ func TestBasicComposition(t *testing.T) {
 SELECT *
 FROM Employees
 WHERE (name = 'Marge')
+GROUP BY role
 ORDER BY id
+LIMIT 30
   `))
 }
 
@@ -28,6 +33,7 @@ func TestArgumentComposition(t *testing.T) {
 	expect(t, args, []interface{}{"Marge", "Comptroller"})
 	expect(t, sql, strings.TrimSpace("WHERE (name = ?) AND (role = ?)"))
 }
+
 /* Test Helpers */
 func expect(t *testing.T, a interface{}, b interface{}) {
 	if !reflect.DeepEqual(a, b) {

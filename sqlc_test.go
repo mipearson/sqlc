@@ -21,6 +21,13 @@ ORDER BY id
   `))
 }
 
+func TestArgumentComposition(t *testing.T) {
+	s := Statement{}
+	s = s.Where("name = ?", "Marge").Where("role = ?", "Comptroller")
+	sql, args := s.ToSQL()
+	expect(t, args, []interface{}{"Marge", "Comptroller"})
+	expect(t, sql, strings.TrimSpace("WHERE (name = ?) AND (role = ?)"))
+}
 /* Test Helpers */
 func expect(t *testing.T, a interface{}, b interface{}) {
 	if !reflect.DeepEqual(a, b) {

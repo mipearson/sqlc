@@ -26,7 +26,6 @@ type component struct {
 type Statement struct {
 	selects []component
 	froms   []component
-	joins   []component
 	wheres  []component
 	groups  []component
 	orders  []component
@@ -40,11 +39,6 @@ func (s Statement) Select(partial string, args ...interface{}) Statement {
 
 func (s Statement) From(partial string, args ...interface{}) Statement {
 	s.froms = append(s.froms, component{partial, args})
-	return s
-}
-
-func (s Statement) Join(partial string, args ...interface{}) Statement {
-	s.joins = append(s.joins, component{partial, args})
 	return s
 }
 
@@ -77,9 +71,6 @@ func (s Statement) ToSQL() (string, []interface{}) {
 	}
 	if len(s.froms) > 0 {
 		parts = append(parts, "FROM "+joinParts(s.froms, " ,", &args))
-	}
-	if len(s.joins) > 0 {
-		parts = append(parts, "JOIN "+joinParts(s.joins, " ,", &args))
 	}
 	if len(s.wheres) > 0 {
 		parts = append(parts, "WHERE "+joinParts(s.wheres, " AND ", &args))

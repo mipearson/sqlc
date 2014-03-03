@@ -1,4 +1,4 @@
-// Package sqlc makes it helps you combine bits of arbitrary bits of SQL
+// Package sqlc helps you combine bits of arbitrary bits of SQL
 package sqlc
 
 import "strings"
@@ -68,7 +68,7 @@ func (s Statement) Limit(partial string, args ...interface{}) Statement {
 	return s
 }
 
-func (s Statement) String() (string, []interface{}) {
+func (s Statement) ToSQL() (string, []interface{}) {
 	parts := make([]string, 0)
 	args := make([]interface{}, 0)
 
@@ -98,7 +98,7 @@ func (s Statement) String() (string, []interface{}) {
 }
 
 func joinParts(components []component, joiner string, args *[]interface{}) string {
-	partials := make([]string, len(components))
+	partials := make([]string, 0)
 	for _, component := range components {
 		partials = append(partials, addPart(component, args))
 	}
@@ -106,6 +106,6 @@ func joinParts(components []component, joiner string, args *[]interface{}) strin
 }
 
 func addPart(component component, args *[]interface{}) string {
-	*args = append(*args, component.args)
+	*args = append(*args, component.args...)
 	return component.partial
 }

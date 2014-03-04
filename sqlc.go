@@ -59,6 +59,7 @@ type Statement struct {
 	PostgreSQL bool
 	selects    []component
 	froms      []component
+	joins      []component
 	wheres     []component
 	groups     []component
 	havings    []component
@@ -75,6 +76,13 @@ func (s Statement) Select(partial string, args ...interface{}) Statement {
 // From adds a FROM stanza, joined by commas
 func (s Statement) From(partial string, args ...interface{}) Statement {
 	s.froms = append(s.froms, component{partial, args})
+	return s
+}
+
+// Join adds a JOIN stanza, joined by spaces
+// Unlike other stanzas, you need to specify the JOIN/INNER JOIN/LEFT JOIN bit yourself.
+func (s Statement) Join(partial string, args ...interface{}) Statement {
+	s.joins = append(s.joins, component{partial, args})
 	return s
 }
 
@@ -118,6 +126,9 @@ func (s Statement) ToSQL() (sql string, args []interface{}) {
 	}
 	if len(s.froms) > 0 {
 		parts = append(parts, "FROM "+joinParts(s.froms, " ,", &args))
+	}
+	if len(s.joins) > 0 {
+		parts = append(parts, joinParts(s.joins, " ", &args))
 	}
 	if len(s.wheres) > 0 {
 		parts = append(parts, "WHERE "+joinParts(s.wheres, " AND ", &args))

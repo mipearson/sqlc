@@ -14,12 +14,14 @@ func TestBasicComposition(t *testing.T) {
 	s = s.Where("name = 'Marge'")
 	s = s.Select("*").From("Employees")
 	s = s.Having("a=1")
+	s = s.Join("LEFT JOIN Companies").Join("INNER JOIN Roles")
 
 	sql, args := s.ToSQL()
 	expect(t, args, make([]interface{}, 0))
 	expect(t, sql, strings.TrimSpace(`
 SELECT *
 FROM Employees
+LEFT JOIN Companies INNER JOIN Roles
 WHERE (name = 'Marge')
 GROUP BY role
 HAVING (a=1)

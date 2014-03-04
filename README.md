@@ -16,26 +16,58 @@ SQL Composer is for when you are putting together many different bits of a query
 
 ``` go
 s := sqlc.Statement{}
-s.Select("*").From("Users").Where("Name = ?", name)
+s.Select("u.*").From("Users u").Where("u.Name = ?", name)
 
 if search.Surname != "" {
-  s = s.Where("Surname = ?", search.Surname)
+  s = s.Where("u.Surname = ?", search.Surname)
 }
 if search.Role != "" {
-  s = s.From("JOIN Roles ON Users.role_id = Role.id")
-  s = s.Where("Roles.Name = ?", search.Role)
+  s = s.Join("JOIN Roles r ON u.role_id = r.id")
+  s = s.Where("r.Name = ?", search.Role)
 }
 
-db.Exec(s.ToSQL())
+db.Exec(s.SQL(), s.Args()...)
 ```
 
-It also supports PostgreSQL-style positional arguments!
+Assuming that `Surname` and `Role` are supplied, calling `s.SQL()` gives you the sql:
+
+``` sql
+SELECT u.*
+FROM Users u
+JOIN Roles r ON u.role_id = r.id
+WHERE (u.Name = ?) AND (u.Surname = ?) AND (r.Name = ?)
+```
+
+And calling `s.Args()` gives you `name`, `search.Surname` and `search.Role`.
+
+## Features
+
+### Postgres Positional Arguments
+
+PostgreSQL, unlike MySQL and sqlite, uses `$1, $2, $3` in favour of `?, ?, ?` for its positional arguments. SQL Composer will manage this for you:
 
 ``` go
 s := sqlc.Statement{PostgreSQL: true}
 s.Where("Foo = ?", foo).Where("Bar = ?", bar)
 
-sql, _ := s.ToSql()
-// sql == "WHERE (Foo = $1) AND (Bar = $2)"
 ```
 
+gives
+
+``` sql
+WHERE (Foo = $1) AND (Bar = $2)
+```
+
+### Statement Re-Use
+
+Pass-by-value and method chaining allows you to use one base statement in many roles without modifying the original.
+
+For example:
+
+``` go
+s = sqlc.Statement{}
+s.Select("*").From("Users")
+
+topFiveRows := s.Limit(5).SQL() // SELECT * FROM Users LIMIT 5
+allRows := s.SQL()              // SELECT * FROM Users
+```

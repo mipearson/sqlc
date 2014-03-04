@@ -12,7 +12,7 @@ SELECT * FROM Users WHERE Name=?
 
 SQL Composer isn't for that. You should keep using string literals for that.
 
-SQL Composer is for when you are putting together many differet bits of a query together programatically, and where you'd usually use some kind of intelligent string replacement. In our use case, we often do this for searches. SQL Composer lets you do this slightly differently:
+SQL Composer is for when you are putting together many different bits of a query together programatically, and where you'd usually use some kind of intelligent string replacement. In our use case, we often do this for searches. SQL Composer lets you do this slightly differently:
 
 ``` go
 s := sqlc.Statement{}

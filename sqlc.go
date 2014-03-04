@@ -1,4 +1,4 @@
-// Package sqlc helps you combine bits of arbitrary bits of SQL
+// Package sqlc helps you combine arbitrary bits of SQL
 package sqlc
 
 import (

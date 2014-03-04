@@ -39,6 +39,20 @@ func TestArgumentComposition(t *testing.T) {
 	expect(t, sql, strings.TrimSpace("WHERE (name = $1) AND (role = $2)"))
 }
 
+func TestImmutability(t *testing.T) {
+	orig := Statement{}
+	orig = orig.Select("apples")
+	sql, _ := orig.ToSQL()
+	expect(t, sql, strings.TrimSpace("SELECT apples"))
+
+	modified := orig.Select("oranges")
+	sql, _ = modified.ToSQL()
+	expect(t, sql, strings.TrimSpace("SELECT apples, oranges"))
+
+	sql, _ = orig.ToSQL()
+	expect(t, sql, strings.TrimSpace("SELECT apples"))
+}
+
 /* Test Helpers */
 func expect(t *testing.T, a interface{}, b interface{}) {
 	if !reflect.DeepEqual(a, b) {

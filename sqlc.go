@@ -34,6 +34,7 @@ type Statement struct {
 	froms      []component
 	wheres     []component
 	groups     []component
+	havings    []component
 	orders     []component
 	limit      component
 }
@@ -53,6 +54,12 @@ func (s Statement) From(partial string, args ...interface{}) Statement {
 // Where adds a WHERE stanza, wrapped in brackets and joined by AND
 func (s Statement) Where(partial string, args ...interface{}) Statement {
 	s.wheres = append(s.wheres, component{"(" + partial + ")", args})
+	return s
+}
+
+// Where adds a HAVING stanza, wrapped in brackets and joined by AND
+func (s Statement) Having(partial string, args ...interface{}) Statement {
+	s.havings = append(s.havings, component{"(" + partial + ")", args})
 	return s
 }
 
@@ -90,6 +97,9 @@ func (s Statement) ToSQL() (sql string, args []interface{}) {
 	}
 	if len(s.groups) > 0 {
 		parts = append(parts, "GROUP BY "+joinParts(s.groups, " ,", &args))
+	}
+	if len(s.havings) > 0 {
+		parts = append(parts, "HAVING "+joinParts(s.havings, " AND ", &args))
 	}
 	if len(s.orders) > 0 {
 		parts = append(parts, "ORDER BY "+joinParts(s.orders, " ,", &args))

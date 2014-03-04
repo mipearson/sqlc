@@ -13,6 +13,7 @@ func TestBasicComposition(t *testing.T) {
 	s = s.Group("role").Order("id").Limit("30")
 	s = s.Where("name = 'Marge'")
 	s = s.Select("*").From("Employees")
+	s = s.Having("a=1")
 
 	sql, args := s.ToSQL()
 	expect(t, args, make([]interface{}, 0))
@@ -21,6 +22,7 @@ SELECT *
 FROM Employees
 WHERE (name = 'Marge')
 GROUP BY role
+HAVING (a=1)
 ORDER BY id
 LIMIT 30
   `))

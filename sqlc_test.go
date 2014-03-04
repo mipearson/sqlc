@@ -32,6 +32,11 @@ func TestArgumentComposition(t *testing.T) {
 	sql, args := s.ToSQL()
 	expect(t, args, []interface{}{"Marge", "Comptroller"})
 	expect(t, sql, strings.TrimSpace("WHERE (name = ?) AND (role = ?)"))
+
+	// PostgreSQL argument composition
+	s.PostgreSQL = true
+	sql, _ = s.ToSQL()
+	expect(t, sql, strings.TrimSpace("WHERE (name = $1) AND (role = $2)"))
 }
 
 /* Test Helpers */

@@ -1,7 +1,10 @@
 // Package sqlc helps you combine bits of arbitrary bits of SQL
 package sqlc
 
-import "strings"
+import (
+	"fmt"
+	"strings"
+)
 
 type component struct {
 	partial string
@@ -23,48 +26,58 @@ type component struct {
 //     [ FETCH { FIRST | NEXT } [ count ] { ROW | ROWS } ONLY ]
 //     [ FOR { UPDATE | NO KEY UPDATE | SHARE | KEY SHARE } [ OF table_name [, ...] ] [ NOWAIT ] [...] ]
 
+// Statement is a SQL string being built
 type Statement struct {
-	selects []component
-	froms   []component
-	wheres  []component
-	groups  []component
-	orders  []component
-	limit   component
+	// PostgreSQL replaces "?, ?" with "$1, $2" if true
+	PostgreSQL bool
+	selects    []component
+	froms      []component
+	wheres     []component
+	groups     []component
+	orders     []component
+	limit      component
 }
 
+// Select adds a SELECT stanza, joined by commas
 func (s Statement) Select(partial string, args ...interface{}) Statement {
 	s.selects = append(s.selects, component{partial, args})
 	return s
 }
 
+// From adds a FROM stanza, joined by commas
 func (s Statement) From(partial string, args ...interface{}) Statement {
 	s.froms = append(s.froms, component{partial, args})
 	return s
 }
 
+// Where adds a WHERE stanza, wrapped in brackets and joined by AND
 func (s Statement) Where(partial string, args ...interface{}) Statement {
 	s.wheres = append(s.wheres, component{"(" + partial + ")", args})
 	return s
 }
 
+// Group adds a GROUP BY stanza, joined by commas
 func (s Statement) Group(partial string, args ...interface{}) Statement {
 	s.groups = append(s.groups, component{partial, args})
 	return s
 }
 
+// Order adds an ORDER BY stanza, joined by commas
 func (s Statement) Order(partial string, args ...interface{}) Statement {
 	s.orders = append(s.orders, component{partial, args})
 	return s
 }
 
+// Limit sets or overwrites the LIMIT stanza
 func (s Statement) Limit(partial string, args ...interface{}) Statement {
 	s.limit = component{partial, args}
 	return s
 }
 
-func (s Statement) ToSQL() (string, []interface{}) {
+// ToSQL joins your stanzas together, returning the SQL and positional arguments.
+func (s Statement) ToSQL() (sql string, args []interface{}) {
 	parts := make([]string, 0)
-	args := make([]interface{}, 0)
+	args = make([]interface{}, 0)
 
 	if len(s.selects) > 0 {
 		parts = append(parts, "SELECT "+joinParts(s.selects, ", ", &args))
@@ -85,7 +98,12 @@ func (s Statement) ToSQL() (string, []interface{}) {
 		parts = append(parts, "LIMIT "+addPart(s.limit, &args))
 	}
 
-	return strings.Join(parts, "\n"), args
+	sql = strings.Join(parts, "\n")
+
+	if s.PostgreSQL {
+		sql = replacePositionalArguments(sql, 1)
+	}
+	return sql, args
 }
 
 func joinParts(components []component, joiner string, args *[]interface{}) string {
@@ -99,4 +117,14 @@ func joinParts(components []component, joiner string, args *[]interface{}) strin
 func addPart(component component, args *[]interface{}) string {
 	*args = append(*args, component.args...)
 	return component.partial
+}
+
+func replacePositionalArguments(sql string, c int) string {
+	arg := fmt.Sprintf("$%d", c)
+	newSql := strings.Replace(sql, "?", arg, 1)
+
+	if newSql != sql {
+		return replacePositionalArguments(newSql, c+1)
+	}
+	return newSql
 }

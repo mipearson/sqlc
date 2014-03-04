@@ -92,7 +92,7 @@ func (s Statement) Where(partial string, args ...interface{}) Statement {
 	return s
 }
 
-// Where adds a HAVING stanza, wrapped in brackets and joined by AND
+// Having adds a HAVING stanza, wrapped in brackets and joined by AND
 func (s Statement) Having(partial string, args ...interface{}) Statement {
 	s.havings = append(s.havings, component{"(" + partial + ")", args})
 	return s

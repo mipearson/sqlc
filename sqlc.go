@@ -11,20 +11,47 @@ type component struct {
 	args    []interface{}
 }
 
-// From the psql documentation:
-// SELECT [ ALL | DISTINCT [ ON ( expression [, ...] ) ] ]
-//     * | expression [ [ AS ] output_name ] [, ...]
-//     [ FROM from_item [, ...] ]
-//     [ WHERE condition ]
-//     [ GROUP BY expression [, ...] ]
-//     [ HAVING condition [, ...] ]
-//     [ WINDOW window_name AS ( window_definition ) [, ...] ]
-//     [ { UNION | INTERSECT | EXCEPT } [ ALL | DISTINCT ] select ]
-//     [ ORDER BY expression [ ASC | DESC | USING operator ] [ NULLS { FIRST | LAST } ] [, ...] ]
-//     [ LIMIT { count | ALL } ]
-//     [ OFFSET start [ ROW | ROWS ] ]
-//     [ FETCH { FIRST | NEXT } [ count ] { ROW | ROWS } ONLY ]
-//     [ FOR { UPDATE | NO KEY UPDATE | SHARE | KEY SHARE } [ OF table_name [, ...] ] [ NOWAIT ] [...] ]
+/*
+From the psql documentation:
+SELECT [ ALL | DISTINCT [ ON ( expression [, ...] ) ] ]
+    * | expression [ [ AS ] output_name ] [, ...]
+    [ FROM from_item [, ...] ]
+    [ WHERE condition ]
+    [ GROUP BY expression [, ...] ]
+    [ HAVING condition [, ...] ]
+    [ WINDOW window_name AS ( window_definition ) [, ...] ]
+    [ { UNION | INTERSECT | EXCEPT } [ ALL | DISTINCT ] select ]
+    [ ORDER BY expression [ ASC | DESC | USING operator ] [ NULLS { FIRST | LAST } ] [, ...] ]
+    [ LIMIT { count | ALL } ]
+    [ OFFSET start [ ROW | ROWS ] ]
+    [ FETCH { FIRST | NEXT } [ count ] { ROW | ROWS } ONLY ]
+    [ FOR { UPDATE | NO KEY UPDATE | SHARE | KEY SHARE } [ OF table_name [, ...] ] [ NOWAIT ] [...] ]
+
+From the mysql documentation:
+SELECT
+    [ALL | DISTINCT | DISTINCTROW ]
+      [HIGH_PRIORITY]
+      [STRAIGHT_JOIN]
+      [SQL_SMALL_RESULT] [SQL_BIG_RESULT] [SQL_BUFFER_RESULT]
+      [SQL_CACHE | SQL_NO_CACHE] [SQL_CALC_FOUND_ROWS]
+    select_expr [, select_expr ...]
+    [FROM table_references
+      [PARTITION partition_list]
+    [WHERE where_condition]
+    [GROUP BY {col_name | expr | position}
+      [ASC | DESC], ... [WITH ROLLUP]]
+    [HAVING where_condition]
+    [ORDER BY {col_name | expr | position}
+      [ASC | DESC], ...]
+    [LIMIT {[offset,] row_count | row_count OFFSET offset}]
+    [PROCEDURE procedure_name(argument_list)]
+    [INTO OUTFILE 'file_name'
+        [CHARACTER SET charset_name]
+        export_options
+      | INTO DUMPFILE 'file_name'
+      | INTO var_name [, var_name]]
+    [FOR UPDATE | LOCK IN SHARE MODE]]
+*/
 
 // Statement is a SQL string being built
 type Statement struct {

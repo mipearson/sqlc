@@ -116,55 +116,73 @@ func (s Statement) Limit(partial string, args ...interface{}) Statement {
 	return s
 }
 
-// ToSQL joins your stanzas together, returning the SQL and positional arguments.
-func (s Statement) ToSQL() (sql string, args []interface{}) {
+// Args returns positional arguments in the order they will appear in the SQL.
+func (s Statement) Args() []interface{} {
+	args := make([]interface{}, 0)
+
+	appendArgs(&args, s.selects...)
+	appendArgs(&args, s.froms...)
+	appendArgs(&args, s.joins...)
+	appendArgs(&args, s.wheres...)
+	appendArgs(&args, s.groups...)
+	appendArgs(&args, s.havings...)
+	appendArgs(&args, s.orders...)
+	appendArgs(&args, s.limit)
+
+	return args
+}
+
+// SQL joins your stanzas, returning the composed SQL.
+func (s Statement) SQL() string {
 	parts := make([]string, 0)
-	args = make([]interface{}, 0)
 
 	if len(s.selects) > 0 {
-		parts = append(parts, "SELECT "+joinParts(s.selects, ", ", &args))
+		parts = append(parts, "SELECT "+joinParts(s.selects, ", "))
 	}
 	if len(s.froms) > 0 {
-		parts = append(parts, "FROM "+joinParts(s.froms, " ,", &args))
+		parts = append(parts, "FROM "+joinParts(s.froms, " ,"))
 	}
 	if len(s.joins) > 0 {
-		parts = append(parts, joinParts(s.joins, " ", &args))
+		parts = append(parts, joinParts(s.joins, " "))
 	}
 	if len(s.wheres) > 0 {
-		parts = append(parts, "WHERE "+joinParts(s.wheres, " AND ", &args))
+		parts = append(parts, "WHERE "+joinParts(s.wheres, " AND "))
 	}
 	if len(s.groups) > 0 {
-		parts = append(parts, "GROUP BY "+joinParts(s.groups, " ,", &args))
+		parts = append(parts, "GROUP BY "+joinParts(s.groups, " ,"))
 	}
 	if len(s.havings) > 0 {
-		parts = append(parts, "HAVING "+joinParts(s.havings, " AND ", &args))
+		parts = append(parts, "HAVING "+joinParts(s.havings, " AND "))
 	}
 	if len(s.orders) > 0 {
-		parts = append(parts, "ORDER BY "+joinParts(s.orders, " ,", &args))
+		parts = append(parts, "ORDER BY "+joinParts(s.orders, " ,"))
 	}
 	if s.limit.partial != "" {
-		parts = append(parts, "LIMIT "+addPart(s.limit, &args))
+		parts = append(parts, "LIMIT "+s.limit.partial)
 	}
 
-	sql = strings.Join(parts, "\n")
+	sql := strings.Join(parts, "\n")
 
 	if s.PostgreSQL {
 		sql = replacePositionalArguments(sql, 1)
 	}
-	return sql, args
+	return sql
 }
 
-func joinParts(components []component, joiner string, args *[]interface{}) string {
+func joinParts(components []component, joiner string) string {
 	partials := make([]string, 0)
 	for _, component := range components {
-		partials = append(partials, addPart(component, args))
+		partials = append(partials, component.partial)
 	}
 	return strings.Join(partials, joiner)
 }
 
-func addPart(component component, args *[]interface{}) string {
-	*args = append(*args, component.args...)
-	return component.partial
+func appendArgs(args *[]interface{}, components ...component) {
+	for _, component := range components {
+		if len(component.args) > 0 {
+			*args = append(*args, component.args...)
+		}
+	}
 }
 
 func replacePositionalArguments(sql string, c int) string {

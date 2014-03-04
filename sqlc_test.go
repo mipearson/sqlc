@@ -16,9 +16,8 @@ func TestBasicComposition(t *testing.T) {
 	s = s.Having("a=1")
 	s = s.Join("LEFT JOIN Companies").Join("INNER JOIN Roles")
 
-	sql, args := s.ToSQL()
-	expect(t, args, make([]interface{}, 0))
-	expect(t, sql, strings.TrimSpace(`
+	expect(t, s.Args(), make([]interface{}, 0))
+	expect(t, s.SQL(), strings.TrimSpace(`
 SELECT *
 FROM Employees
 LEFT JOIN Companies INNER JOIN Roles
@@ -32,29 +31,24 @@ LIMIT 30
 
 func TestArgumentComposition(t *testing.T) {
 	s := Statement{}
-	s = s.Where("name = ?", "Marge").Where("role = ?", "Comptroller")
-	sql, args := s.ToSQL()
-	expect(t, args, []interface{}{"Marge", "Comptroller"})
-	expect(t, sql, strings.TrimSpace("WHERE (name = ?) AND (role = ?)"))
+	s = s.Where("name = ? OR name = ?", "Marge", "Alice").Where("role = ?", "Comptroller")
+	expect(t, s.Args(), []interface{}{"Marge", "Alice", "Comptroller"})
+	expect(t, s.SQL(), strings.TrimSpace("WHERE (name = ? OR name = ?) AND (role = ?)"))
 
 	// PostgreSQL argument composition
 	s.PostgreSQL = true
-	sql, _ = s.ToSQL()
-	expect(t, sql, strings.TrimSpace("WHERE (name = $1) AND (role = $2)"))
+	expect(t, s.SQL(), strings.TrimSpace("WHERE (name = $1 OR name = $2) AND (role = $3)"))
 }
 
 func TestImmutability(t *testing.T) {
 	orig := Statement{}
 	orig = orig.Select("apples")
-	sql, _ := orig.ToSQL()
-	expect(t, sql, strings.TrimSpace("SELECT apples"))
+	expect(t, orig.SQL(), strings.TrimSpace("SELECT apples"))
 
 	modified := orig.Select("oranges")
-	sql, _ = modified.ToSQL()
-	expect(t, sql, strings.TrimSpace("SELECT apples, oranges"))
+	expect(t, modified.SQL(), strings.TrimSpace("SELECT apples, oranges"))
 
-	sql, _ = orig.ToSQL()
-	expect(t, sql, strings.TrimSpace("SELECT apples"))
+	expect(t, orig.SQL(), strings.TrimSpace("SELECT apples"))
 }
 
 /* Test Helpers */

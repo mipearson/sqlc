@@ -4,7 +4,7 @@
 
 SQL Composer (`sqlc`) makes it easier to join together bits of SQL programatically.
 
-It is very, very similar to (squirrel)[https://github.com/lann/squirrel], but has less features.
+It is very, very similar to [squirrel](https://github.com/lann/squirrel) but has less features.
 
 Most SQL is:
 
